@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{site.name}} Emergency Lighting Status</title>
+    <meta name="description" content="An emergency lighting report">
+    <style>
+      html {
+	  font-family: sans-serif;
+	  line-height: 1.15;
+      }
+      h1 {
+	  font-size: 1.5em;
+      }
+      h2 {
+	  font-size: 1.25em;
+      }
+      .pass {
+          background: green;
+	  color: white;
+      }
+      .fail {
+	  background: red;
+	  color: white;
+      }
+      table td,th {
+	  padding: 0.5em;
+	  margin: 2px;
+      }
+      tbody tr th {
+	  text-align: right;
+	  vertical-align: top;
+      }
+      tbody tr td {
+	  vertical-align: top;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>{{site.name}} emergency lighting status</h1>
+
+    <p>Report generated
+      {{site.report_time.isoformat(sep=' ', timespec='minutes')}}</p>
+
+    <h2>Summary</h2>
+
+    <table>
+      <tbody>
+	<tr>
+	  <th scope="row">Overall status:</th>
+	  {% if site.pass_ %}
+	  <td class="pass">Pass</td>
+	  {% else %}
+	  <td class="fail">Fail</td>
+	  {% endif %}
+	</tr>
+	<tr>
+	  <th scope="row">Gear status summary:</th>
+	  <td>
+	    {% for k, v in site.results.items() %}
+	    {{k}}: {{v}} unit{% if v > 1 %}s{% endif %}<br>
+	    {% endfor %}
+	  </td>
+	</tr>
+      </tbody>
+    </table>
+
+    <h2>Detail</h2>
+
+    <table>
+      <tbody>
+	<tr>
+	  <th scope="row">Rated duration:</th>
+	  <td>{{site.expected_rated_duration}} minutes</td>
+	</tr>
+	<tr>
+	  <th scope="row">Function test interval:</th>
+	  <td>{{site.expected_ft_interval}} days</td>
+	</tr>
+	<tr>
+	  <th scope="row">Duration test interval:</th>
+	  <td>{{site.expected_dt_interval}} weeks</td>
+	</tr>
+	<tr>
+	  <th scope="row">Test execution timeout:</th>
+	  <td>{{site.expected_timeout}} days</td>
+	</tr>
+      </tbody>
+    </table>
+
+    <p>Any deviations from the above intervals will be noted below.</p>
+
+    <table>
+      <thead>
+	<tr>
+	  <th scope="col">Unit</th>
+	  <th scope="col">Status</th>
+	  <th scope="col">Details</th>
+	</tr>
+      </thead>
+      <tbody>
+	{% for gear in site.gear %}
+	<tr>
+	  <td>{{sitename}}/{{gear.busname}}/{{gear.address}}</td>
+	  <td class="{% if gear.pass_ %}pass{% else %}fail{% endif %}">
+	    {{gear.summary}}
+	  </td>
+	  <td>{% for line in gear.list_state() %}{{line}}<br>{% endfor %}</td>
+	</tr>
+	{% endfor %}
+      </tbody>
+    </table>
+    <p>Notes:</p>
+    <p>When the time shown for a function or duration test is reached,
+      the test will enter the "Pending" state. The emergency gear then
+      has {{site.expected_timeout}} days in which to perform the test,
+      at a time of its own choosing. It may have built-in rules about
+      when the test can be performed, for example "the battery must
+      have been charging for 24 hours continuously" or "the lamp must
+      have been extinguished for at least an hour prior to the test".</p>
+    <p>If the test is not performed within {{site.expected_timeout}}
+      days, the test will enter the "Overdue" state and the emergency
+      gear will be listed as failing.</p>
+    <p>
+  </body>
+</html>

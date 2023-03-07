@@ -22,6 +22,9 @@ from dali.gear.emergency import (
     QueryEmergencyFeatures,
     QueryEmergencyFailureStatus,
     QueryEmergencyStatus,
+    StoreTestDelayTimeHighByte,
+    StoreTestDelayTimeLowByte,
+    StoreFunctionTestInterval,
 )
 from .daliserver import DaliServer
 
@@ -138,6 +141,21 @@ class Gear:
     @property
     def dt_scheduled_time(self):
         return self.timestamp + datetime.timedelta(minutes=self.dt_delay)
+
+    def _set_ft_delay_seq(self, delay):
+        a = GearShort(self.address)
+        yield DTR0(delay >> 8)
+        yield StoreTestDelayTimeHighByte(a)
+        yield DTR0(delay & 0xff)
+        yield StoreTestDelayTimeLowByte(a)
+        yield DTR0(self.expected_ft_interval)
+        yield StoreFunctionTestInterval(a)
+
+    def set_ft_delay(self, new_ft_delay):
+        """Sequence to reset the function test interval and delay"""
+        delay = new_ft_delay // 15
+        with self.bus as b:
+            b.send(self._set_ft_delay_seq(delay))
 
     @property
     def summary(self):

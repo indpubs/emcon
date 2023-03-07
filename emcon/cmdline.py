@@ -151,6 +151,44 @@ class Email(Command):
                 site.email_report(sitename)
 
 
+class UpdateFunctionTestInterval(Command):
+    """Update the function test interval in the control gear to match the
+    interval specified in the configuration file"""
+    command = "update-function-test-interval"
+
+    @staticmethod
+    def add_arguments(parser):
+        parser.add_argument(
+            "--dry-run", "-n", action="store_true",
+            help="Display the changes that would be made without actually "
+            "making them")
+
+    @staticmethod
+    def run(args):
+        if args.dry_run:
+            print("*** DRY RUN MODE — changes will not be committed ***")
+        for sitename, site in report.sites.items():
+            for gear in site.gear:
+                idx = f"{sitename}/{gear.bus.key}/{gear.address}: {gear.name}"
+                gear.update()
+                if not gear.is_emergency:
+                    print(f"{idx}: **NOT PRESENT** — skipping")
+                    continue
+                if gear.ft_interval == gear.expected_ft_interval:
+                    print(f"{idx}: FT interval already correct")
+                    continue
+                print(f"{idx}: changing FT interval from {gear.ft_interval} "
+                      f"to {gear.expected_ft_interval}")
+                # If we are reducing the function test interval, reduce
+                # the time to the next test modulo the new interval
+                new_interval_minutes = gear.expected_ft_interval * 24 * 60
+                new_delay = gear.ft_delay % new_interval_minutes
+                print(f"{idx}: FT delay change: {gear.ft_delay} "
+                      f"-> {new_delay} minutes")
+                if not args.dry_run:
+                    gear.set_ft_delay(new_delay)
+
+
 class _BusCommand(Command):
     """Send a single command"""
     @staticmethod

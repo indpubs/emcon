@@ -10,6 +10,7 @@ from dali.gear.emergency import (
     StartFunctionTest,
     StartDurationTest,
     StopTest,
+    StartIdentification,
 )
 
 
@@ -155,6 +156,10 @@ def stop_test(args):
     _send_command(StopTest, args.target)
 
 
+def identify(args):
+    _send_command(StartIdentification, args.target)
+
+
 actions = {
     'list': list_gear,
     'check': check,
@@ -165,4 +170,5 @@ actions = {
     'start-function-test': start_function_test,
     'start-duration-test': start_duration_test,
     'stop-test': stop_test,
+    'identify': identify,
 }

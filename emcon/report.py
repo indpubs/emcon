@@ -72,9 +72,12 @@ passing_next_test_status = {NextTestStatus.SCHEDULED, NextTestStatus.PENDING}
 
 
 class Bus:
-    def __init__(self, d):
+    def __init__(self, d, key, site):
+        self.key = key
+        self.site = site
         self.hostname = d["hostname"]
         self.port = d["port"]
+        self.name = d.get("name", key)
         self._ds = DaliServer(host=self.hostname, port=self.port,
                               multiple_frames_per_connection=True)
 
@@ -83,6 +86,9 @@ class Bus:
 
     def __exit__(self, *vpass):
         self._ds.__exit__(*vpass)
+
+    def __str__(self):
+        return f"{self.site.key}/{self.key}"
 
 
 class Gear:
@@ -314,11 +320,13 @@ class Gear:
 
 
 class Site:
-    def __init__(self, d):
+    def __init__(self, d, key):
+        self.key = key
         self.name = d["name"]
         self.email_to = d["email-to"]
         self.email_from = d["email-from"]
-        self.buses = {k: Bus(v) for k, v in d["buses"].items()}
+        self.buses = {k: Bus(v, key=k, site=self)
+                      for k, v in d["buses"].items()}
         self.expected_rated_duration = d.get("rated-duration", 180)
         self.expected_ft_interval = d.get("function-test-interval", 7)
         self.expected_dt_interval = d.get("duration-test_interval", 52)
@@ -369,4 +377,4 @@ class Site:
 def read_config(f):
     d = tomli.load(f)
     for k, v in d.items():
-        sites[k] = Site(v)
+        sites[k] = Site(v, key=k)

@@ -332,6 +332,7 @@ class Site:
         self.expected_dt_interval = d.get("duration-test_interval", 52)
         self.expected_timeout = d.get("test-execution-timeout", 7)
         self.gear = [Gear(self, g) for g in d["gear"]]
+        self.gearindex = {(g.bus, g.address): g for g in self.gear}
         self.pass_ = False
         self.results = Counter()
 

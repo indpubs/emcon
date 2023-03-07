@@ -3,6 +3,8 @@ import pathlib
 import sys
 from . import report
 from dali.address import GearShort, GearBroadcast
+from dali.gear.general import QueryControlGearPresent
+from dali.sequences import QueryDeviceTypes
 from dali.gear.emergency import (
     Inhibit,
     Rest,
@@ -57,6 +59,37 @@ class ListGear(Command):
         for sitename, site in report.sites.items():
             for gear in site.gear:
                 print(f"{sitename}/{gear.busname}/{gear.address}: {gear.name}")
+
+
+class Scan(Command):
+    """Scan for emergency gear"""
+    command = "scan"
+
+    @staticmethod
+    def run(args):
+        for sitename, site in report.sites.items():
+            for busname, bus in site.buses.items():
+                with bus as b:
+                    for address in range(64):
+                        cfgear = site.gearindex.get((bus, address))
+                        idx = f"{sitename}/{busname}/{address}"
+                        a = GearShort(address)
+                        present = b.send(QueryControlGearPresent(a)).value
+                        if present:
+                            dts = b.send(QueryDeviceTypes(a))
+                            em = 1 in dts
+                        else:
+                            em = False
+                        if cfgear and not em:
+                            print(f"{idx}: {cfgear.name} **MISSING**")
+                        elif em and not cfgear:
+                            print(f"{idx}: **NEW**")
+                        elif args.verbose:
+                            if cfgear:
+                                print(f"{idx}: {cfgear.name}")
+                            else:
+                                if present:
+                                    print(f"{idx}: **NOT EMERGENCY GEAR**")
 
 
 class Check(Command):

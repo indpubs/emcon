@@ -11,6 +11,9 @@ from dali.gear.emergency import (
     StartDurationTest,
     StopTest,
     StartIdentification,
+    ResetFunctionTestDoneFlag,
+    ResetDurationTestDoneFlag,
+    ResetLampTime,
 )
 
 
@@ -200,6 +203,24 @@ class StopTestCmd(_BusCommand):
     """Cancel pending tests and stop any test currently in progress"""
     command = "stop-test"
     dali_command = StopTest
+
+
+class ResetFunctionTestDoneCmd(_BusCommand):
+    """Reset the "function test done and result valid" flag"""
+    command = "reset-function-test-done"
+    dali_command = ResetFunctionTestDoneFlag
+
+
+class ResetDurationTestDoneCmd(_BusCommand):
+    """Reset the "duration test done and result valid" flag"""
+    command = "reset-duration-test-done"
+    dali_command = ResetDurationTestDoneFlag
+
+
+class ResetLampTimeCmd(_BusCommand):
+    """Reset the lamp emergency time and lamp total operation time counters"""
+    command = "reset-lamp-time"
+    dali_command = ResetLampTime
 
 
 def main():
